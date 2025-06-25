@@ -18,7 +18,7 @@ const credential = mongoose.model("credential",{},"bulkmail")
 
 // Create a test account or replace with real credentials.
 
-app.post("https://bulk-mail-mu.vercel.app/sendemail", function(req, res) {
+app.post("https://bulk-mail-vf4.vercel.app//sendemail", function(req, res) {
     var msg = req.body.msg
     var emailList = req.body.emailList
     credential.find().then(function(data) {
