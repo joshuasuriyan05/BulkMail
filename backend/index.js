@@ -1,67 +1,61 @@
-const express = require("express")
-const cors = require("cors")
+const express = require("express");
+const cors = require("cors");
 const nodemailer = require("nodemailer");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+require("dotenv").config(); // for reading .env file
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-mongoose.connect("mongodb+srv://joshua:123@cluster0.77p1ojj.mongodb.net/passkey?retryWrites=true&w=majority&appName=Cluster0").then(function() {
-    console.log("Connected to DataBase")
-}).catch(function() {
-    console.log("Failed to Connect to DataBase")
-})
-const credential = mongoose.model("credential",{},"bulkmail")
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(() => console.log("Failed to connect to MongoDB"));
 
+// Use your MongoDB collection (replace "bulkmail" with your collection name)
+const credential = mongoose.model("credential", {}, "bulkmail");
 
+// POST /sendemail endpoint
+app.post("/sendemail", async (req, res) => {
+  const { msg, emailList } = req.body;
 
-// Create a test account or replace with real credentials.
+  try {
+    const data = await credential.find();
 
-app.post("https://bulk-mail-vf4.vercel.app//sendemail", function(req, res) {
-    var msg = req.body.msg
-    var emailList = req.body.emailList
-    credential.find().then(function(data) {
+    if (!data.length) {
+      return res.status(500).send("No email credentials found");
+    }
+
+    const user = data[0].user;
+    const pass = data[0].pass;
+
     const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: data[0].toJSON().user,
-        pass: data[0].toJSON().pass,
-    },
+      service: "gmail",
+      auth: { user, pass },
+    });
+
+    for (let i = 0; i < emailList.length; i++) {
+      await transporter.sendMail({
+        from: user,
+        to: emailList[i],
+        subject: "A message from Bulk Mail App",
+        text: msg,
+      });
+
+      console.log("Email sent to: " + emailList[i]);
+    }
+
+    res.send(true);
+  } catch (error) {
+    console.error("Error in /sendemail:", error);
+    res.status(500).send(false);
+  }
 });
-new Promise(async function(resolve, reject) {
-        try {
-            for(var i=0;i<emailList.length; i++){
-                await transporter.sendMail(
-                    {
-                        from:"thzcreterz05@gmail.com",
-                        to:emailList[i],
-                        subject: "A message from Bulk Mail App",
-                        text: msg
-                    }
-                )
-                console.log("Email Sent to:"+emailList[i])
-            }
-            resolve("Success")
-        }
-        catch(error)
-        {
-            reject("Failed")
-        }
-    })
 
-})
-.catch(function(error) {
-    console.log(error)
-})
-    .then(function() {
-        res.send(true)
-    })
-    .catch(function() {
-        res.send(false)
-    })
-})
-
-app.listen(5000, function() {
-    console.log("Server Started at 5000....")
-})
+// Server listen
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
