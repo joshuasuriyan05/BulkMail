@@ -7,7 +7,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-mongoose.connect("mongodb+srv://joshua:123@cluster0.5vpqbnd.mongodb.net/passkey?retryWrites=true&w=majority&appName=Cluster0z").then(function() {
+mongoose.connect("mongodb+srv://joshua:123@cluster0.77p1ojj.mongodb.net/passkey?retryWrites=true&w=majority&appName=Cluster0").then(function() {
     console.log("Connected to DataBase")
 }).catch(function() {
     console.log("Failed to Connect to DataBase")
